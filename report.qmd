@@ -297,27 +297,42 @@ Access to safe drinking water has improved in several developing countries over 
 
 ```{python}
 #| label: scatter
-#| fig-width: 10
-#| fig-height: 6
+#| fig-width: 12
+#| fig-height: 7
 #| code-summary: "Scatterplot — birth registration vs safe water access"
+
+label_countries = [
+    "Ethiopia", "Chad", "Mozambique", "Uganda", "Nigeria", "Afghanistan",
+    "Bangladesh", "Pakistan", "Zimbabwe", "Ghana", "Nepal", "Madagascar",
+    "Tuvalu", "Kiribati", "Nauru", "Fiji", "India",
+    "Paraguay", "Samoa", "South Africa", "Ecuador"
+]
+scatter_df["label"] = scatter_df["country"].apply(
+    lambda c: c if c in label_countries else ""
+)
 
 (
     ggplot(scatter_df, aes(x="water_access", y="birth_reg"))
-    + geom_point(color=UNICEF_TEAL, alpha=0.6, size=3)
-    + geom_smooth(method="lm", color=UNICEF_RED, se=True,
-                  fill=UNICEF_RED, alpha=0.12)
-    + scale_x_continuous(limits=(0, 100))
-    + scale_y_continuous(limits=(0, 100))
+    + geom_point(aes(fill="water_access"), color="white",
+                 size=5, alpha=0.85, shape="o")
+    + geom_text(aes(label="label"), size=7, nudge_y=3,
+                color=BLACK, ha="center")
+    + geom_smooth(method="lm", color=UNICEF_GREY, se=False,
+                  linetype="solid", size=0.9)
+    + scale_fill_gradient(low=UNICEF_TEAL, high=UNICEF_GOLD,
+                          name="Water\nAccess (%)")
+    + scale_x_continuous(limits=(0, 105), breaks=list(range(0, 101, 10)))
+    + scale_y_continuous(limits=(0, 107), breaks=list(range(0, 101, 20)))
     + labs(
         title="Birth Registration vs Safe Water Access by Country",
-        subtitle="Countries with stronger infrastructure tend to perform better on both indicators",
+        subtitle="(Values represent country averages. Countries with stronger infrastructure perform better on both indicators.)",
         x="Safe Water Access (%)",
         y="Birth Registration Rate (%)",
         caption="Source: UNICEF  |  Each dot = one country  |  Latest available year per country"
     )
     + theme_minimal()
     + theme(
-        figure_size=(10, 6),
+        figure_size=(12, 7),
         plot_title=element_text(size=13, weight="bold", color=UNICEF_DARK),
         plot_subtitle=element_text(size=9, color=UNICEF_GREY),
         plot_caption=element_text(size=7, color=UNICEF_GREY),
