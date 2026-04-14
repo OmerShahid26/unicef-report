@@ -104,7 +104,7 @@ Every day, children are born across the world without any official record of the
 
 This is not a rare occurrence. Globally, **hundreds of millions of children** under the age of five
 have never been registered at birth. The crisis is deepest in the same countries that also struggle
-to provide their populations with **safe drinking water** — two emergencies with one root cause:
+to provide their populations with **safe drinking water** two emergencies with one root cause:
 failing public services and weak institutions.
 
 This report examines both crises together, using UNICEF data to show where they overlap,
@@ -123,7 +123,7 @@ children in Sub-Saharan Africa are born without legal identity
 
 ::: {.num-card .orange}
 **2.7%**
-birth registration rate in Ethiopia — the world's lowest
+birth registration rate in Ethiopia the world's lowest
 :::
 
 ::: {.num-card .teal}
@@ -191,6 +191,53 @@ map_br = world.merge(
 > **Sub-Saharan Africa and fragile states**. Weak administrative systems, poverty,
 > and limited access to public services leave millions born without legal identity.
 
+### 🌊 Water Access Map
+
+**Where do children lack access to safely managed drinking water?**
+
+The map shades each country by its safe water access rate.
+*Deep blue = high water access. Light yellow = very low access. Grey = no data.*
+
+```{python}
+#| label: world-map-water
+#| fig-width: 12
+#| fig-height: 5.5
+#| code-summary: "Safe water access world map code"
+
+map_sw = world.merge(
+    sw_latest[["alpha_3_code", "obs_value"]],
+    left_on="iso_a3", right_on="alpha_3_code", how="left"
+)
+
+(
+    ggplot(map_sw)
+    + geom_map(aes(fill="obs_value"), color="#FFFFFF", size=0.2)
+    + scale_fill_gradient(
+        low="#FFF3CD", high="#16A085",
+        name="Water\nAccess (%)",
+        na_value="#BDC3C7", limits=(0, 100)
+    )
+    + labs(
+        title="Safe Water Access by Country (%)",
+        subtitle="Deep teal = high safe water access  |  Light yellow = very low access  |  Grey = no data",
+        caption="Source: UNICEF  |  Latest available year per country"
+    )
+    + theme_void()
+    + theme(
+        figure_size=(12, 5.5),
+        plot_title=element_text(size=15, weight="bold", color=C_DARK),
+        plot_subtitle=element_text(size=9, color=C_GREY),
+        plot_caption=element_text(size=7, color=C_GREY),
+        panel_background=element_rect(fill=C_SAND),
+        plot_background=element_rect(fill=C_SAND),
+    )
+)
+```
+
+> Sub-Saharan Africa and parts of South Asia show the lowest access to safely managed
+> drinking water. These are the same regions with the lowest birth registration rates,
+> confirming that **both crises share the same root cause: failing public services.**
+
 ### 📊 Bar Chart
 
 **Which 15 countries fail their children the most?**
@@ -249,13 +296,13 @@ band_colors = {
 )
 ```
 
-> **Ethiopia records just 2.7%** — 97 in 100 children born with no legal proof of existence.
+> **Ethiopia records just 2.7%** 97 in 100 children born with no legal proof of existence.
 > Without a birth certificate, a child cannot enrol in school, access healthcare,
 > or claim any legal protection.
 
 ### 📈 Time Series
 
-**Is the water crisis improving — and for whom?**
+**Is the water crisis improving and for whom?**
 
 Tracking safe water access across six heavily affected countries from 2000 to 2024.
 
@@ -312,7 +359,7 @@ country_colors = {
 ```
 
 > **Bangladesh** has made the strongest gains toward 60%. **Chad and Ethiopia** remain
-> trapped below 15% even in 2024 — barely any progress over 24 years.
+> trapped below 15% even in 2024 barely any progress over 24 years.
 > These same countries also have the lowest birth registration rates.
 
 ### 🔵 Scatter Plot
@@ -320,7 +367,7 @@ country_colors = {
 **Do these two crises go hand in hand?**
 
 Each bubble is one country. Bigger bubbles = larger population.
-Colour shows birth registration rate — red = low, green = high.
+Colour shows birth registration rate red = low, green = high.
 
 ```{python}
 #| label: scatter
@@ -377,7 +424,7 @@ scatter_df["label"] = scatter_df["country"].apply(
 
 > Countries in the **bottom-left** (low water, low registration) are almost entirely
 > Sub-Saharan Africa. Countries in the **top-right** are Europe and East Asia.
-> **Both crises are driven by the same root cause — institutional failure.**
+> **Both crises are driven by the same root cause institutional failure.**
 
 :::
 
@@ -392,7 +439,7 @@ scatter_df["label"] = scatter_df["country"].apply(
 ### The Pattern Is Clear
 
 The countries that fail to register births are the same countries that fail to provide
-safe water. This is not a coincidence — it is the signature of **state failure**.
+safe water. This is not a coincidence it is the signature of **state failure**.
 
 When a government cannot maintain civil registration systems, it almost certainly cannot
 maintain water infrastructure either. And when children lack both a legal identity
@@ -413,10 +460,10 @@ maintain water infrastructure either. And when children lack both a legal identi
 
 **Immediate actions needed:**
 
-1. 📋 **Universal birth registration** — free, automatic, and available at every health facility
-2. 💧 **Investment in water infrastructure** — particularly in Sub-Saharan Africa
-3. 📱 **Digital civil registration** — mobile-based systems to reach remote communities
-4. 📊 **Consistent data collection** — countries cannot fix what they cannot measure
+1. 📋 **Universal birth registration** free, automatic, and available at every health facility
+2. 💧 **Investment in water infrastructure** particularly in Sub-Saharan Africa
+3. 📱 **Digital civil registration** mobile-based systems to reach remote communities
+4. 📊 **Consistent data collection** countries cannot fix what they cannot measure
 
 **The bottom line:**
 
@@ -439,6 +486,6 @@ maintain water infrastructure either. And when children lack both a legal identi
 *Visualisations produced with Python (plotnine, geopandas, pandas). Rendered with Quarto.*
 
 <div class="footer-banner">
-<strong>UNICEF — For Every Child</strong><br/>
+<strong>UNICEF For Every Child</strong><br/>
 <span>Every child deserves an identity. Every child deserves clean water. The data demands action.</span>
 </div>
