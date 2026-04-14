@@ -1,19 +1,20 @@
 ---
 title: "Born Invisible"
-subtitle: "Birth Registration & Safe Water Access — A UNICEF Data Report"
+subtitle: "The Global Crisis of Unregistered Children & Unsafe Water"
 author: "Omer Shahid"
 date: today
 format:
   html:
     embed-resources: true
     code-fold: true
-    theme: cosmo
+    theme: journal
     toc: true
-    toc-title: "Contents"
+    toc-title: "📋 Report Contents"
     toc-depth: 3
     fig-align: center
-    page-layout: full
+    page-layout: article
     css: styles.css
+    highlight-style: github
 execute:
   warning: false
   message: false
@@ -22,7 +23,7 @@ execute:
 
 ```{python}
 #| label: setup
-#| code-summary: "Load libraries & data"
+#| code-summary: "⚙️ Load libraries & prepare data"
 
 import pandas as pd
 import geopandas as gpd
@@ -58,340 +59,357 @@ def _load_world():
 
 world = _load_world()
 
-# ── Colour palette ─────────────────────────────────────────────────────────────
-UNICEF_BLUE  = "#1CABE2"
-UNICEF_DARK  = "#374EA2"
-UNICEF_TEAL  = "#00833D"
-UNICEF_RED   = "#E2231A"
-UNICEF_GOLD  = "#F9A825"
-UNICEF_GREY  = "#6D6E71"
-BG_COLOR     = "#F4F9F4"
-BLACK        = "#333333"
+# ── Earthy/warm colour palette — distinct from UNICEF blue ────────────────────
+C_DARK    = "#2C3E50"   # dark navy
+C_RED     = "#C0392B"   # deep red
+C_ORANGE  = "#E67E22"   # orange
+C_GOLD    = "#F39C12"   # gold
+C_GREEN   = "#27AE60"   # green
+C_TEAL    = "#16A085"   # teal
+C_SAND    = "#F5F0E8"   # warm sand background
+C_GREY    = "#7F8C8D"   # grey
+BLACK     = "#2C3E50"
 
-# ── Tidy birth registration (ind2) ────────────────────────────────────────────
+# ── Tidy birth registration ────────────────────────────────────────────────────
 ind2.columns = ind2.columns.str.strip()
-br_total = ind2[ind2["sex"] == "Total"].copy()
-br_latest = (
-    br_total.sort_values("time_period", ascending=False)
-            .drop_duplicates("alpha_3_code")
-            .reset_index(drop=True)
-)
+br_total  = ind2[ind2["sex"] == "Total"].copy()
+br_latest = (br_total.sort_values("time_period", ascending=False)
+                     .drop_duplicates("alpha_3_code")
+                     .reset_index(drop=True))
 
-# ── Tidy safe water (ind1) ────────────────────────────────────────────────────
+# ── Tidy safe water ────────────────────────────────────────────────────────────
 ind1.columns = ind1.columns.str.strip()
-sw_latest = (
-    ind1.sort_values("time_period", ascending=False)
-        .drop_duplicates("alpha_3_code")
-        .reset_index(drop=True)
-)
+sw_latest = (ind1.sort_values("time_period", ascending=False)
+                 .drop_duplicates("alpha_3_code")
+                 .reset_index(drop=True))
 
-# ── Merge birth reg + safe water for scatter ──────────────────────────────────
-scatter_df = br_latest[["alpha_3_code", "country", "obs_value"]].merge(
-    sw_latest[["alpha_3_code", "obs_value"]].rename(
-        columns={"obs_value": "water_access"}),
-    on="alpha_3_code", how="inner"
-).rename(columns={"obs_value": "birth_reg"})
+# ── Merge for scatter — include population for bubble sizing ──────────────────
+meta_pop = (meta.dropna(subset=["Population, total"])
+                .sort_values("year", ascending=False)
+                .drop_duplicates("alpha_3_code")
+            [["alpha_3_code", "Population, total"]]
+            .rename(columns={"Population, total": "population"}))
 
-# ── Time series: safe water for key countries ─────────────────────────────────
-ts_countries = ["Bangladesh", "Pakistan", "Afghanistan", "Nigeria", "Ethiopia", "Chad"]
+scatter_df = (br_latest[["alpha_3_code", "country", "obs_value"]]
+              .merge(sw_latest[["alpha_3_code", "obs_value"]]
+                     .rename(columns={"obs_value": "water_access"}),
+                     on="alpha_3_code", how="inner")
+              .rename(columns={"obs_value": "birth_reg"})
+              .merge(meta_pop, on="alpha_3_code", how="left"))
+scatter_df["pop_m"] = scatter_df["population"] / 1e6  # millions
+
+# ── Time series ────────────────────────────────────────────────────────────────
+ts_countries = ["Bangladesh", "Pakistan", "Afghanistan",
+                "Nigeria", "Ethiopia", "Chad"]
 ts_df = ind1[ind1["country"].isin(ts_countries)].copy()
 ```
 
 ---
 
-## 🌍 Born Invisible: A Child Without Identity
+> *"A child without birth registration is invisible to the state — without identity, access to education, healthcare, and legal protection becomes uncertain."*
 
-> *"A child without birth registration is invisible to the state — without identity, access to education, healthcare, and protection becomes uncertain."*
-
-The global crisis of **unregistered children** and **unequal access to safe drinking water** highlights deep development gaps across countries. Where basic services fail, children are often left without both identity and protection.
-
-This report explores the relationship between **birth registration** and **access to safe drinking water** across countries. Both indicators reflect the strength of national systems and public services. Countries that struggle to provide essential infrastructure often also face challenges ensuring that every child is formally registered at birth. Understanding this relationship helps highlight where global action is most urgently needed.
+The global crisis of **unregistered children** runs parallel to another silent emergency: **lack of access to safe drinking water**. Both crises share the same root cause — weak institutions and failing public services. This report uses UNICEF data to expose where these failures are most severe, and what the numbers mean for real children.
 
 ---
 
-## 📌 Key Statistics
+## The Numbers That Shock
 
-::: {.callout-important}
-### The Scale of the Crisis
+::: {layout-ncol=3}
+::: {.stat-box}
+**1 in 3**
+children in Sub-Saharan Africa are born without legal identity
+:::
 
-- **1 in 3 children** in Sub-Saharan Africa are not officially registered at birth, leaving millions without legal identity
-- **2.7%** — Ethiopia recorded one of the lowest birth registration rates globally, meaning **97 out of 100 children** have no legal identity
-- **1 in 5 children** globally still lack access to safely managed drinking water services, affecting health and development outcomes
-- Countries with the **lowest birth registration** rates are largely concentrated in **Sub-Saharan Africa and fragile states**
+::: {.stat-box}
+**2.7%**
+Ethiopia's birth registration rate — the world's lowest
+:::
+
+::: {.stat-box}
+**1 in 5**
+children globally lack safely managed drinking water
+:::
 :::
 
 ---
 
-## 🗺️ Chart 1: Birth Registration Rate by Country
+## Part I — The Geography of Invisibility {#sec-map}
 
-*This map shows the percentage of children under age 5 whose births are registered. Countries shaded in deeper green have higher registration rates. Grey countries indicate no data available.*
+*Where are unregistered children most concentrated? The map below reveals a stark pattern — the darker the shade, the lower the birth registration rate.*
 
 ```{python}
-#| label: world-map-birth
+#| label: world-map
 #| fig-width: 12
-#| fig-height: 6
-#| code-summary: "World map — birth registration rate"
+#| fig-height: 5.5
+#| code-summary: "🗺️ World map — birth registration rate by country"
 
 map_br = world.merge(
     br_latest[["alpha_3_code", "obs_value"]],
-    left_on="iso_a3", right_on="alpha_3_code",
-    how="left"
+    left_on="iso_a3", right_on="alpha_3_code", how="left"
 )
 
+# Invert: low registration = dark red, high = light sand
 (
     ggplot(map_br)
-    + geom_map(aes(fill="obs_value"), color="white", size=0.15)
+    + geom_map(aes(fill="obs_value"), color="#FFFFFF", size=0.2)
     + scale_fill_gradient(
-        low="#FFCCCC", high=UNICEF_TEAL,
-        name="Registered (%)",
-        na_value="#CCCCCC",
+        low=C_RED, high="#D5E8D4",
+        name="Registered\nChildren (%)",
+        na_value="#BDC3C7",
         limits=(0, 100)
     )
     + labs(
-        title="Birth Registration Rate by Country (%)",
-        subtitle="Percentage of children under age 5 whose births are officially registered",
-        caption="Source: UNICEF  |  Grey = no data available  |  Latest available year per country"
+        title="Birth Registration Rate by Country",
+        subtitle="Deep red = fewer registered children | Light green = near-universal registration | Grey = no data",
+        caption="Source: UNICEF  |  Latest available year per country"
     )
     + theme_void()
     + theme(
-        figure_size=(12, 6),
-        plot_title=element_text(size=15, weight="bold", color=UNICEF_DARK),
-        plot_subtitle=element_text(size=10, color=UNICEF_GREY),
-        plot_caption=element_text(size=8, color=UNICEF_GREY),
-        panel_background=element_rect(fill=BG_COLOR),
-        plot_background=element_rect(fill=BG_COLOR),
+        figure_size=(12, 5.5),
+        plot_title=element_text(size=16, weight="bold", color=C_DARK, margin={"b": 5}),
+        plot_subtitle=element_text(size=9, color=C_GREY, margin={"b": 8}),
+        plot_caption=element_text(size=7, color=C_GREY),
+        panel_background=element_rect(fill=C_SAND),
+        plot_background=element_rect(fill=C_SAND),
+        legend_title=element_text(size=8),
     )
 )
 ```
 
-### 🔎 Key Insight
-
-Countries with the lowest birth registration rates are largely concentrated in **Sub-Saharan Africa and fragile states**. Weak administrative systems, poverty, and limited access to public services contribute to millions of children being born without legal identity.
-
-- **Europe, Latin America, and East Asia** show near-universal registration (90–100%)
-- **Sub-Saharan Africa** shows the darkest gaps — many countries below 50%
-- **Ethiopia** records just **2.7%** — the lowest in the world
+::: {.callout-warning icon=false}
+### 📍 Key Insight
+Countries with the lowest birth registration rates cluster in **Sub-Saharan Africa and South Asia**. Weak administrative systems, poverty, and limited public services leave millions of children born without any legal identity. **Ethiopia (2.7%), Somalia (3%) and Papua New Guinea (13%)** are among the most critical cases.
+:::
 
 ---
 
-## 📊 Chart 2: Countries with the Lowest Birth Registration Rates
+## Part II — The 15 Nations Most Failing Their Children {#sec-bar}
 
-*These 15 nations have the lowest birth registration rates in the world. Ethiopia records just 2.7%, meaning 97 out of 100 children have no legal identity.*
+*Every bar below represents a country where the majority of children grow up without a birth certificate — and without the rights and protections that come with one.*
 
 ```{python}
 #| label: bar-chart
-#| fig-width: 10
+#| fig-width: 11
 #| fig-height: 6
-#| code-summary: "Bar chart — 15 countries with lowest birth registration"
+#| code-summary: "📊 Bar chart — countries with lowest birth registration"
 
 bottom15 = (
     br_latest.nsmallest(15, "obs_value")
-             .sort_values("obs_value", ascending=False)
+             .sort_values("obs_value")
              .assign(country=lambda d: pd.Categorical(
                  d["country"], categories=d["country"], ordered=True))
 )
+# Assign colour bands
+bottom15["band"] = pd.cut(
+    bottom15["obs_value"],
+    bins=[-1, 10, 25, 50],
+    labels=["Critical (<10%)", "Severe (10–25%)", "High (25–50%)"]
+)
+
+band_colors = {
+    "Critical (<10%)":   C_RED,
+    "Severe (10–25%)":   C_ORANGE,
+    "High (25–50%)":     C_GOLD,
+}
 
 (
-    ggplot(bottom15, aes(x="country", y="obs_value", fill="obs_value"))
-    + geom_col(width=0.75)
-    + geom_text(aes(label="obs_value.round(1)"), ha="left",
-                nudge_y=0.5, size=8, color=BLACK)
-    + scale_fill_gradient(low=UNICEF_RED, high=UNICEF_GOLD)
+    ggplot(bottom15, aes(x="country", y="obs_value", fill="band"))
+    + geom_col(width=0.7)
+    + geom_text(aes(label="obs_value.round(1)"),
+                ha="left", nudge_y=0.4, size=8, color=BLACK)
+    + scale_fill_manual(values=band_colors, name="Severity")
     + coord_flip()
     + scale_y_continuous(limits=(0, 52), expand=(0, 0))
     + labs(
-        title="15 Nations Where Most Children Are Born Invisible",
-        subtitle="Countries with the lowest birth registration rates (% of children under 5)",
+        title="Countries with the Lowest Birth Registration Rates",
+        subtitle="% of children under age 5 whose births are officially registered — latest available year",
         x=None,
         y="Birth Registration Rate (%)",
-        caption="Source: UNICEF Indicator Data  |  Latest available year per country"
+        caption="Source: UNICEF Indicator Data"
     )
     + theme_minimal()
     + theme(
-        figure_size=(10, 6),
-        plot_title=element_text(size=13, weight="bold", color=UNICEF_DARK),
-        plot_subtitle=element_text(size=9, color=UNICEF_GREY),
-        plot_caption=element_text(size=7, color=UNICEF_GREY),
-        panel_background=element_rect(fill=BG_COLOR),
-        plot_background=element_rect(fill=BG_COLOR),
+        figure_size=(11, 6),
+        plot_title=element_text(size=13, weight="bold", color=C_DARK),
+        plot_subtitle=element_text(size=9, color=C_GREY),
+        plot_caption=element_text(size=7, color=C_GREY),
+        panel_background=element_rect(fill=C_SAND),
+        plot_background=element_rect(fill=C_SAND),
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
+        legend_position="right",
+        axis_text=element_text(size=9),
+    )
+)
+```
+
+::: {.callout-important icon=false}
+### 🚨 These Are Not Just Statistics
+**Ethiopia records just 2.7%** — meaning 97 in every 100 children are born with no legal proof of existence. **Somalia (3%), Papua New Guinea (13.4%), and Zambia (14%)** follow. Without a birth certificate, a child cannot enrol in school, access healthcare, own property, or vote. **Invisibility is not just a statistic — it is a life sentence.**
+:::
+
+---
+
+## Part III — Safe Water: Progress That Is Too Slow {#sec-ts}
+
+*Tracking safe water access from 2000 to 2024 across six of the most affected countries reveals that progress — while real — is deeply uneven.*
+
+```{python}
+#| label: time-series
+#| fig-width: 12
+#| fig-height: 6
+#| code-summary: "📈 Time-series — safe water access 2000–2024"
+
+country_colors = {
+    "Bangladesh":  C_TEAL,
+    "Pakistan":    C_GREEN,
+    "Afghanistan": C_ORANGE,
+    "Nigeria":     C_GOLD,
+    "Ethiopia":    C_RED,
+    "Chad":        C_DARK,
+}
+
+# Add end-of-line labels
+ts_end = ts_df.sort_values("time_period").groupby("country").last().reset_index()
+
+(
+    ggplot(ts_df, aes(x="time_period", y="obs_value",
+                      color="country", group="country"))
+    + geom_line(size=1.4, alpha=0.9)
+    + geom_point(size=2.2, alpha=0.8)
+    + geom_text(data=ts_end,
+                mapping=aes(x="time_period", y="obs_value", label="country", color="country"),
+                nudge_x=0.5, ha="left", size=8)
+    + scale_color_manual(values=country_colors, guide=None)
+    + scale_x_continuous(breaks=list(range(2000, 2025, 2)),
+                         limits=(2000, 2027))
+    + scale_y_continuous(limits=(0, 70),
+                         labels=lambda l: [f"{int(v)}%" for v in l])
+    + labs(
+        title="Progress in Safe Water Access, 2000–2024",
+        subtitle="% of population using safely managed drinking water services",
+        x=None,
+        y="Safe Water Access",
+        caption="Source: UNICEF  |  Indicator: Safely managed drinking water services"
+    )
+    + theme_minimal()
+    + theme(
+        figure_size=(12, 6),
+        plot_title=element_text(size=13, weight="bold", color=C_DARK),
+        plot_subtitle=element_text(size=9, color=C_GREY),
+        plot_caption=element_text(size=7, color=C_GREY),
+        panel_background=element_rect(fill=C_SAND),
+        plot_background=element_rect(fill=C_SAND),
+        panel_grid_minor=element_blank(),
+        axis_text_x=element_text(angle=35),
         legend_position="none",
     )
 )
 ```
 
-### 🔎 These Are Not Just Statistics — These Are Children
-
-Every bar represents a nation where children are growing up **without a legal identity**:
-
-- **Ethiopia (2.7%)** — 97 in 100 children have no birth certificate
-- **Somalia (3.0%)** and **Papua New Guinea (13.4%)** follow closely
-- Without a birth certificate, children **cannot access schools, hospitals, or legal protection**
-- These are not war zones alone — they are countries where the **state has simply failed to show up** for its youngest citizens
+::: {.callout-note icon=false}
+### 📊 Trend Insight
+**Bangladesh** leads the group, rising steadily from under 20% to nearly 60% safe water access. **Chad and Ethiopia** remain trapped below 15% even in 2024 — barely any progress over 24 years. **Afghanistan and Nigeria** show gains but remain critically low. Countries with weak water access are almost always the same ones with the lowest birth registration — these crises are inseparable.
+:::
 
 ---
 
-## 📈 Chart 3: Progress in Safe Water Access 2000–2024
+## Part IV — Two Crises, One Root Cause {#sec-scatter}
 
-*This time-series tracks safe water access for six of the most affected countries from 2000 to 2024. Progress is real — but deeply uneven.*
-
-```{python}
-#| label: time-series
-#| fig-width: 11
-#| fig-height: 6
-#| code-summary: "Time-series — safe water access by country 2000-2024"
-
-country_colors = {
-    "Bangladesh": UNICEF_GOLD,
-    "Pakistan":   UNICEF_BLUE,
-    "Afghanistan":"#00833D",
-    "Nigeria":    "#374EA2",
-    "Ethiopia":   UNICEF_RED,
-    "Chad":       "#E91E63"
-}
-
-(
-    ggplot(ts_df, aes(x="time_period", y="obs_value",
-                      color="country", group="country"))
-    + geom_line(size=1.2)
-    + geom_point(size=2)
-    + scale_color_manual(values=country_colors, name="Country")
-    + scale_x_continuous(breaks=list(range(2000, 2025, 2)))
-    + scale_y_continuous(limits=(0, 70))
-    + labs(
-        title="Progress in Safe Water Access 2000–2024",
-        subtitle="% of population using safely managed drinking water — selected countries",
-        x="Year",
-        y="Safe Water Access (%)",
-        caption="Source: UNICEF Indicator Data  |  Indicator: Safely managed drinking water services"
-    )
-    + theme_minimal()
-    + theme(
-        figure_size=(11, 6),
-        plot_title=element_text(size=13, weight="bold", color=UNICEF_DARK),
-        plot_subtitle=element_text(size=9, color=UNICEF_GREY),
-        plot_caption=element_text(size=7, color=UNICEF_GREY),
-        panel_background=element_rect(fill=BG_COLOR),
-        plot_background=element_rect(fill=BG_COLOR),
-        panel_grid_minor=element_blank(),
-        axis_text_x=element_text(angle=30),
-    )
-)
-```
-
-### 🔎 Trend Insight
-
-Access to safe drinking water has improved in several developing countries over the last two decades. However, **progress is uneven**, and countries with weak infrastructure continue to lag behind:
-
-- **Bangladesh** has made the strongest gains, rising steadily toward 60%
-- **Chad and Ethiopia** remain critically low — below 15% even in 2024
-- Progress largely **stalled after 2020**, likely due to COVID-19 disruptions
-- These same countries with poor water access also have the **lowest birth registration rates** — they are symptoms of the same systemic failure
-
----
-
-## 🔵 Chart 4: Birth Registration vs Safe Water Access
-
-*Each dot represents one country. Countries with better safe water access tend to also have higher birth registration rates — both are driven by the same underlying institutional strength.*
+*This chart plots every country by its safe water access rate (X axis) against its birth registration rate (Y axis). Each bubble is one country — bigger bubbles represent larger populations.*
 
 ```{python}
 #| label: scatter
 #| fig-width: 12
 #| fig-height: 7
-#| code-summary: "Scatterplot — birth registration vs safe water access"
+#| code-summary: "🔵 Bubble chart — birth registration vs safe water access"
 
 label_countries = [
     "Ethiopia", "Chad", "Mozambique", "Uganda", "Nigeria", "Afghanistan",
     "Bangladesh", "Pakistan", "Zimbabwe", "Ghana", "Nepal", "Madagascar",
-    "Tuvalu", "Kiribati", "Nauru", "Fiji", "India",
-    "Paraguay", "Samoa", "South Africa", "Ecuador"
+    "Kiribati", "Nauru", "Fiji", "India", "Paraguay", "Samoa",
+    "South Africa", "Ecuador", "Zambia", "Somalia"
 ]
 scatter_df["label"] = scatter_df["country"].apply(
     lambda c: c if c in label_countries else ""
 )
+# Cap pop for sizing
+scatter_df["pop_sz"] = scatter_df["pop_m"].clip(upper=500).fillna(50)
 
 (
     ggplot(scatter_df, aes(x="water_access", y="birth_reg"))
-    + geom_point(aes(fill="water_access"), color="white",
-                 size=5, alpha=0.85, shape="o")
-    + geom_text(aes(label="label"), size=7, nudge_y=3,
-                color=BLACK, ha="center")
-    + geom_smooth(method="lm", color=UNICEF_GREY, se=False,
-                  linetype="solid", size=0.9)
-    + scale_fill_gradient(low=UNICEF_TEAL, high=UNICEF_GOLD,
-                          name="Water\nAccess (%)")
-    + scale_x_continuous(limits=(0, 105), breaks=list(range(0, 101, 10)))
-    + scale_y_continuous(limits=(0, 107), breaks=list(range(0, 101, 20)))
+    + geom_point(aes(size="pop_sz", fill="birth_reg"),
+                 color="white", alpha=0.75, shape="o")
+    + geom_text(aes(label="label"), size=7,
+                nudge_y=3, color=C_DARK, ha="center")
+    + geom_smooth(method="lm", color=C_GREY, se=False,
+                  linetype="dashed", size=1)
+    + scale_fill_gradient(low=C_RED, high=C_GREEN,
+                          name="Birth Reg\nRate (%)")
+    + scale_size_continuous(range=(2, 14), guide=None)
+    + scale_x_continuous(limits=(0, 105),
+                         breaks=list(range(0, 101, 10)),
+                         labels=lambda l: [f"{int(v)}%" for v in l])
+    + scale_y_continuous(limits=(0, 110),
+                         breaks=list(range(0, 101, 20)),
+                         labels=lambda l: [f"{int(v)}%" for v in l])
     + labs(
         title="Birth Registration vs Safe Water Access by Country",
-        subtitle="(Values represent country averages. Countries with stronger infrastructure perform better on both indicators.)",
+        subtitle="Bubble size = population  |  Colour = birth registration rate  |  Dashed line = trend",
         x="Safe Water Access (%)",
         y="Birth Registration Rate (%)",
-        caption="Source: UNICEF  |  Each dot = one country  |  Latest available year per country"
+        caption="Source: UNICEF  |  Each bubble = one country  |  Latest available year"
     )
     + theme_minimal()
     + theme(
         figure_size=(12, 7),
-        plot_title=element_text(size=13, weight="bold", color=UNICEF_DARK),
-        plot_subtitle=element_text(size=9, color=UNICEF_GREY),
-        plot_caption=element_text(size=7, color=UNICEF_GREY),
-        panel_background=element_rect(fill=BG_COLOR),
-        plot_background=element_rect(fill=BG_COLOR),
+        plot_title=element_text(size=13, weight="bold", color=C_DARK),
+        plot_subtitle=element_text(size=9, color=C_GREY),
+        plot_caption=element_text(size=7, color=C_GREY),
+        panel_background=element_rect(fill=C_SAND),
+        plot_background=element_rect(fill=C_SAND),
         panel_grid_minor=element_blank(),
+        axis_text=element_text(size=9),
     )
 )
 ```
 
-### 🔎 Relationship Insight
-
-The scatter plot shows a **positive link** between safe water access and birth registration. Countries with stronger infrastructure tend to perform better on both, suggesting **institutional capacity drives both outcomes**:
-
-- Countries in the **bottom-left corner** (low water, low registration) are almost all in Sub-Saharan Africa
-- Countries in the **top-right corner** (high water, high registration) are mostly in Europe and East Asia
-- Even among middle-income countries, the relationship holds — **basic services rise and fall together**
-
----
-
-## 💬 Conclusion
-
-> *"Birth registration and access to safe drinking water are both fundamental indicators of development. Countries that lack essential infrastructure often struggle to maintain effective civil registration systems."*
-
-The data tells a clear and urgent story:
-
-- **1 in 3 children** in Sub-Saharan Africa are born without legal identity
-- **1 in 5 children** globally lack safely managed drinking water
-- The **same countries** that fail on water access also fail on birth registration
-- **Progress is happening** — but it is too slow, too uneven, and too fragile
-
-Strengthening public services, improving governance, and investing in basic infrastructure are **critical steps** toward ensuring that every child is counted, protected, and given a legal identity.
-
-::: {.callout-tip}
-### ✊ What Must Be Done?
-
-1. **Universal birth registration** — Free, accessible registration at every health facility
-2. **Invest in water infrastructure** — Safe water is a prerequisite for child survival
-3. **Strengthen civil registration** — Digital and mobile-based systems for remote areas
-4. **Close the data gap** — Countries cannot address what they cannot measure
+::: {.callout-note icon=false}
+### 🔍 Relationship Insight
+The dashed trend line confirms a **strong positive relationship** — countries with better safe water access consistently show higher birth registration rates. Both indicators are driven by the same underlying force: **institutional capacity**. Countries in the bottom-left corner (low water, low registration) are almost entirely in Sub-Saharan Africa. The top-right cluster (high water, high registration) is dominated by Europe and East Asia.
 :::
 
 ---
 
-## 📚 Data Sources
+## Conclusion
 
-| Dataset | Description |
-|---|---|
-| `unicef_indicator_1.csv` | % of population using safely managed drinking water services |
-| `unicef_indicator_2.csv` | % of children under age 5 whose births are registered |
-| `unicef_metadata.csv` | Country-level GDP, life expectancy, population (World Bank via UNICEF) |
-| Natural Earth (built-in) | World country geometries for choropleth mapping |
+Birth registration and access to safe drinking water are both **fundamental indicators of development**. Countries that lack essential infrastructure often struggle on both fronts simultaneously — and the children who suffer most are the ones who are never counted.
 
-*All data sourced from UNICEF and the World Bank. Visualisations produced with Python (plotnine, geopandas, pandas) and rendered with Quarto.*
+**The path forward requires:**
+
+1. 📋 **Universal birth registration** — free, automatic, and accessible at every health facility
+2. 💧 **Investment in water infrastructure** — particularly in Sub-Saharan Africa and fragile states
+3. 📱 **Digital civil registration** — mobile-based systems to reach remote communities
+4. 📊 **Consistent data collection** — countries cannot fix what they cannot measure
+
+> ***"Strengthening public services, improving governance, and investing in basic infrastructure are critical steps toward ensuring that every child is counted, protected, and given a legal identity."***
 
 ---
 
-<div style="text-align:center; margin-top:40px; padding:20px;
-            background-color:#00833D; border-radius:8px; color:white;">
-  <h3 style="margin:0; font-size:1.4em;">🌐 UNICEF — For Every Child</h3>
-  <p style="margin:8px 0 0 0; font-size:0.9em;">Every child deserves an identity. Every child deserves clean water. The data demands action.</p>
+## Data Sources
+
+| File | Indicator |
+|------|-----------|
+| `unicef_indicator_1.csv` | % of population using safely managed drinking water |
+| `unicef_indicator_2.csv` | % of children under age 5 whose births are registered |
+| `unicef_metadata.csv` | GDP, population, life expectancy (World Bank via UNICEF) |
+| Natural Earth | World map geometries |
+
+*Visualisations built with Python (plotnine, geopandas) and rendered with Quarto.*
+
+---
+
+<div class="footer-banner">
+  <strong>UNICEF — For Every Child</strong><br/>
+  <span>Every child deserves an identity. Every child deserves clean water.</span>
 </div>
