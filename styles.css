@@ -1,4 +1,4 @@
-/* Born Invisible — Omer Shahid — Warm Earthy Theme */
+/* Born Invisible — Omer Shahid */
 
 body {
   font-family: 'Georgia', serif;
@@ -9,70 +9,81 @@ body {
 
 h1.title {
   color: #C0392B;
-  font-size: 2.6em;
+  font-size: 2.8em;
   font-weight: 900;
   letter-spacing: -1px;
-}
-
-p.subtitle {
-  color: #7F8C8D;
-  font-style: italic;
+  border-bottom: 4px solid #E67E22;
+  padding-bottom: 12px;
 }
 
 h2 {
   color: #2C3E50;
-  border-bottom: 3px solid #E67E22;
-  padding-bottom: 6px;
-  margin-top: 2.2em;
-  font-size: 1.4em;
+  font-size: 1.5em;
+  margin-top: 2em;
+  border-left: 5px solid #E67E22;
+  padding-left: 12px;
 }
 
 h3 {
   color: #C0392B;
-  font-size: 1.05em;
 }
 
 blockquote {
   border-left: 5px solid #E67E22;
   background-color: #FEF9F0;
-  padding: 1em 1.5em;
+  padding: 0.8em 1.4em;
   border-radius: 0 8px 8px 0;
   font-style: italic;
   color: #2C3E50;
-  font-size: 1.05em;
+  margin: 16px 0;
 }
 
-/* Stat boxes */
-.stat-box {
-  background: #2C3E50;
-  color: white;
-  padding: 20px;
+/* Number cards row */
+.numbers-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+
+.num-card {
+  flex: 1;
+  min-width: 160px;
+  padding: 20px 16px;
   border-radius: 10px;
   text-align: center;
-  font-size: 0.95em;
+  color: white;
+  font-size: 0.88em;
+  line-height: 1.4;
 }
 
-.stat-box strong {
+.num-card strong {
   display: block;
   font-size: 2em;
-  color: #F39C12;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  font-family: 'Arial', sans-serif;
 }
 
-/* Footer */
-.footer-banner {
-  text-align: center;
-  margin-top: 48px;
-  padding: 24px;
-  background: #2C3E50;
-  border-radius: 10px;
-  color: white;
-  font-size: 1.1em;
+.num-card.red    { background: #C0392B; }
+.num-card.orange { background: #E67E22; }
+.num-card.teal   { background: #16A085; }
+.num-card.dark   { background: #2C3E50; }
+
+/* Tabset styling */
+.panel-tabset .nav-tabs {
+  border-bottom: 3px solid #E67E22;
 }
 
-.footer-banner span {
-  font-size: 0.85em;
-  opacity: 0.8;
+.panel-tabset .nav-tabs .nav-link {
+  color: #2C3E50;
+  font-weight: 600;
+  font-family: 'Arial', sans-serif;
+}
+
+.panel-tabset .nav-tabs .nav-link.active {
+  color: #C0392B;
+  border-bottom: 3px solid #C0392B;
+  background: transparent;
 }
 
 /* Tables */
@@ -80,6 +91,7 @@ table {
   font-size: 0.88em;
   border-collapse: collapse;
   width: 100%;
+  font-family: 'Arial', sans-serif;
 }
 
 th {
@@ -94,12 +106,23 @@ td {
   border-bottom: 1px solid #e0d9cc;
 }
 
-tr:hover td {
-  background-color: #FEF9F0;
+tr:hover td { background-color: #FEF9F0; }
+
+/* Footer */
+.footer-banner {
+  text-align: center;
+  margin-top: 48px;
+  padding: 28px;
+  background: #2C3E50;
+  border-radius: 10px;
+  color: white;
+  font-size: 1.1em;
+  font-family: 'Arial', sans-serif;
 }
 
-/* Callout tweaks */
-.callout {
-  border-radius: 8px;
-  font-size: 0.95em;
+.footer-banner span {
+  font-size: 0.85em;
+  opacity: 0.8;
+  display: block;
+  margin-top: 6px;
 }
